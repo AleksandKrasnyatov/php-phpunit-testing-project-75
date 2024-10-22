@@ -1,0 +1,35 @@
+#!/usr/bin/env php
+
+<?php
+
+use function Downloader\Downloader\downloadPage;
+
+$autoloadPath1 = __DIR__ . '/../../../autoload.php';
+$autoloadPath2 = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($autoloadPath1)) {
+    require_once $autoloadPath1;
+} else {
+    require_once $autoloadPath2;
+}
+
+$currentDir = getcwd();
+
+$doc = <<<DOC
+
+    Generate diff
+    
+    Usage:
+        page-loader (-h|--help)
+        page-loader [--output <dir>] <url>                                                                   
+        page-loader (-v|--version)
+    Options:                                                                                                 
+        -h --help            display help for command                                                          
+        -v --version         output the version number                                                         
+        -o --output <dir>    output dir [default: $currentDir]
+    
+    DOC;
+
+
+$result = Docopt::handle($doc, array('version'=>'Generate diff 1.0'));
+
+downloadPage( $result['<url>'], $result['--output']);
