@@ -2,6 +2,7 @@
 
 <?php
 
+use GuzzleHttp\Client;
 use function Downloader\Downloader\downloadPage;
 
 $autoloadPath1 = __DIR__ . '/../../../autoload.php';
@@ -32,4 +33,4 @@ $doc = <<<DOC
 
 $result = Docopt::handle($doc, array('version'=>'Generate diff 1.0'));
 
-downloadPage( $result['<url>'], $result['--output']);
+downloadPage( $result['<url>'], $result['--output'], Client::class);

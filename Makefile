@@ -1,9 +1,6 @@
 install:
 	composer install
 
-page-loader:
-	./bin/page-loader
-
 lint:
 	composer exec --verbose phpcs -- --standard=PSR12 src bin tests
 
