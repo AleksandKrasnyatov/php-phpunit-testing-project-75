@@ -2,31 +2,32 @@
 
 namespace tests;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\Psr7\Request;
-use GuzzleHttp\Psr7\Response;
+use GuzzleHttp\Exception\GuzzleException;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\TestCase;
+
 use function Downloader\Downloader\downloadPage;
+use function Downloader\Downloader\getNameFromUrl;
 
 class DownloaderTest extends TestCase
 {
     /**
      * @var  vfsStreamDirectory
      */
-    private $root;
-    public $client;
+    private vfsStreamDirectory $root;
 
     /**
-     * @throws \PHPUnit\Framework\MockObject\Exception
+     * @return void
      */
     public function setUp(): void
     {
         $this->root = vfsStream::setup('exampleDir');
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function testCreateFileRecursive(): void
     {
         $directoryPath = vfsStream::url('exampleDir') . "/test/test2";
@@ -38,18 +39,23 @@ class DownloaderTest extends TestCase
         $this->assertTrue($secondChild->hasChild('foo-com.html'));
     }
 
+    /**
+     * @throws GuzzleException
+     */
     public function testFileContent(): void
     {
         $expectedFilePath = __DIR__ . "/fixtures/responseBody.txt";
         $directoryPath = vfsStream::url('exampleDir');
-//        $responseBody = '{ "package": "guzzle" }';
-//        $rightResponse = new Response(200, [], $responseBody);
-//        $this->mock->append($rightResponse);
-
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
-        $file = $this->root->getChild('foo-com.html');
         $this->assertFileExists($directoryPath . "/foo-com.html");
         $this->assertFileEquals($directoryPath . "/foo-com.html", $expectedFilePath);
-//        $this->assertEquals($responseBody, $file->getContent());
+    }
+
+    /**
+     * @return void
+     */
+    public function testGetNameFromUrlFunction(): void
+    {
+        $this->assertEquals('foo-com.html', getNameFromUrl('https://foo.com'));
     }
 }

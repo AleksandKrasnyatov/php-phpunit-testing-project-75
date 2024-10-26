@@ -2,11 +2,7 @@
 
 namespace Downloader\Downloader;
 
-use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Handler\MockHandler;
-use GuzzleHttp\Psr7\Response;
-use tests\FakeClient;
 
 /**
  * @param string $url
@@ -19,10 +15,22 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
 {
     $client = new $clientClass();
     $html = $client->get($url)->getBody()->getContents();
-    mkdir($outputPath, recursive: true);
-    $filePath = $outputPath . "/foo-com.html";
+    if (!is_dir($outputPath)) {
+        mkdir($outputPath, recursive: true);
+    }
+    $fileName = getNameFromUrl($url);
+    $filePath = $outputPath . "/{$fileName}";
     touch($filePath);
     file_put_contents($filePath, $html);
-////    dd($outputPath);
-////    mkdir($outputPath);
+}
+
+/**
+ * @param string $url
+ * @return string
+ */
+function getNameFromUrl(string $url): string
+{
+    $urlParts = parse_url($url);
+    $modifiedHost = str_replace('.', '-', $urlParts['host']);
+    return "$modifiedHost.html";
 }

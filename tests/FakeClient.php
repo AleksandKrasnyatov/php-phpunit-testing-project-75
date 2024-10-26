@@ -9,6 +9,8 @@ use Exception;
  */
 class FakeClient
 {
+    public string|false $response;
+
     public function __construct()
     {
         $fixtureFilePath = __DIR__ . "/fixtures/responseBody.txt";
@@ -19,17 +21,17 @@ class FakeClient
         }
     }
 
-    public function get(string $url)
+    public function get(string $url): static
     {
         return $this;
     }
 
-    public function getBody()
+    public function getBody(): static
     {
         return $this;
     }
 
-    public function getContents()
+    public function getContents(): string
     {
         return $this->response;
     }
