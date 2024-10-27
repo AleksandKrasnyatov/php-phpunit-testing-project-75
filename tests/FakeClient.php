@@ -21,8 +21,13 @@ class FakeClient
         }
     }
 
-    public function get(string $url): static
+    public function get(string $url, array $options = []): static
     {
+        if (array_key_exists('sink', $options)) {
+            touch($options['sink']);
+            $content = file_get_contents(__DIR__ . "/$url");
+            file_put_contents($options['sink'], $content);
+        }
         return $this;
     }
 

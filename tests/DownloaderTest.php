@@ -56,6 +56,20 @@ class DownloaderTest extends TestCase
      */
     public function testGetNameFromUrlFunction(): void
     {
-        $this->assertEquals('foo-com.html', getNameFromUrl('https://foo.com'));
+        $this->assertEquals('foo-com', getNameFromUrl('https://foo.com'));
+        $this->assertEquals('foo-com-courses-data', getNameFromUrl('https://foo.com/courses/data'));
+    }
+
+    /**
+     * @throws GuzzleException
+     */
+    public function testImagesLogic(): void
+    {
+        $expectedFilePath = __DIR__ . "/fixtures/mrstar.png";
+        $directoryPath = vfsStream::url('exampleDir');
+        downloadPage('https://foo.com', $directoryPath, FakeClient::class);
+        $newFilePath = "{$directoryPath}/foo-com_files/fixtures-mrstar.png";
+        $this->assertFileExists($newFilePath);
+        $this->assertFileEquals($newFilePath, $expectedFilePath);
     }
 }

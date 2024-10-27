@@ -2,7 +2,11 @@
 
 namespace Downloader\Downloader;
 
+use DiDom\Document;
+use DiDom\Exceptions\InvalidSelectorException;
+use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use tests\FakeClient;
 
 /**
  * @param string $url
@@ -10,6 +14,7 @@ use GuzzleHttp\Exception\GuzzleException;
  * @param string $clientClass tests\FakeClient| GuzzleHttp\Client
  * @return void
  * @throws GuzzleException
+ * @throws InvalidSelectorException
  */
 function downloadPage(string $url, $outputPath, string $clientClass): void
 {
@@ -18,10 +23,36 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
     if (!is_dir($outputPath)) {
         mkdir($outputPath, recursive: true);
     }
-    $fileName = getNameFromUrl($url);
-    $filePath = $outputPath . "/{$fileName}";
+    $urlModifiedName = getNameFromUrl($url);
+    $filePath = "{$outputPath}/{$urlModifiedName}.html";
     touch($filePath);
     file_put_contents($filePath, $html);
+
+    $document = new Document($html);
+    if ($document->has('img')) {
+        $imagesDirPath = "{$outputPath}/{$urlModifiedName}_files";
+        $elements = $document->find('img');
+        downloadImages($imagesDirPath, $elements, $client);
+    }
+}
+
+/**
+ * @param string $dirPath
+ * @param array $urls
+ * @param FakeClient|Client $client
+ * @return void
+ * @throws GuzzleException
+ */
+function downloadImages(string $dirPath, array $urls, FakeClient|Client $client): void
+{
+    if (!is_dir($dirPath)) {
+        mkdir($dirPath);
+    }
+    foreach ($urls as $url) {
+        $imgUrl = $url->getAttribute('src');
+        $imageUrlModifiedName = getNameFromUrl($imgUrl);
+        $client->get($imgUrl, ['sink' => "{$dirPath}/{$imageUrlModifiedName}"]);
+    }
 }
 
 /**
@@ -31,6 +62,7 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
 function getNameFromUrl(string $url): string
 {
     $urlParts = parse_url($url);
-    $modifiedHost = str_replace('.', '-', $urlParts['host']);
-    return "$modifiedHost.html";
+    $modifiedHost = str_replace('.', '-', $urlParts['host'] ?? '');
+    $modifiedPath = str_replace(['/', '_'], '-', $urlParts['path'] ?? '');
+    return "{$modifiedHost}{$modifiedPath}";
 }

@@ -10,5 +10,9 @@
         </nav>
     </header>
     <div>some content</div>
+    <img src="fixtures/mrstar.png" alt="тестовая картинка" />
+    <h3>
+      <a href="/professions/php">PHP-программист</a>
+    </h3>
 </body>
 </html>
