@@ -10,7 +10,7 @@
         </nav>
     </header>
     <div>some content</div>
-    <img src="foo-com_files/foo-com-assets-mrstar.png" alt="тестовая картинка">
+    <img src="https://foo.com/assets/mrstar.png" alt="тестовая картинка">
     <h3>
       <a href="/professions/php">PHP-программист</a>
     </h3>

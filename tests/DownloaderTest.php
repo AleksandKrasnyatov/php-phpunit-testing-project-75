@@ -47,8 +47,7 @@ class DownloaderTest extends TestCase
         $expectedFilePath = __DIR__ . "/fixtures/responseBody.txt";
         $directoryPath = vfsStream::url('exampleDir');
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
-        $this->assertFileExists($directoryPath . "/foo-com.html");
-        $this->assertFileEquals($directoryPath . "/foo-com.html", $expectedFilePath);
+        $this->assertFileEquals($expectedFilePath, $directoryPath . "/foo-com.html");
     }
 
     /**
@@ -68,8 +67,7 @@ class DownloaderTest extends TestCase
         $expectedFilePath = __DIR__ . "/fixtures/mrstar.png";
         $directoryPath = vfsStream::url('exampleDir');
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
-        $newFilePath = "{$directoryPath}/foo-com_files/fixtures-mrstar.png";
-        $this->assertFileExists($newFilePath);
-        $this->assertFileEquals($newFilePath, $expectedFilePath);
+        $newFilePath = "{$directoryPath}/foo-com_files/foo-com-assets-mrstar.png";
+        $this->assertFileEquals($expectedFilePath, $newFilePath);
     }
 }

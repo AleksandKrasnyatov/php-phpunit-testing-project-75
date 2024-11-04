@@ -26,32 +26,38 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
     $urlModifiedName = getNameFromUrl($url);
     $filePath = "{$outputPath}/{$urlModifiedName}.html";
     touch($filePath);
-    file_put_contents($filePath, $html);
 
     $document = new Document($html);
     if ($document->has('img')) {
-        $imagesDirPath = "{$outputPath}/{$urlModifiedName}_files";
-        $elements = $document->find('img');
-        downloadImages($imagesDirPath, $elements, $client);
+        processImages($document, $client, ['outputPath' => $outputPath, 'imagesDirPath' => "{$urlModifiedName}_files"]);
     }
+    file_put_contents($filePath, $document->html());
 }
 
 /**
- * @param string $dirPath
- * @param array $urls
+ * @param Document $document
  * @param FakeClient|Client $client
+ * @param string $imagesDirPath
  * @return void
  * @throws GuzzleException
+ * @throws InvalidSelectorException
  */
-function downloadImages(string $dirPath, array $urls, FakeClient|Client $client): void
+function processImages(Document $document, FakeClient|Client $client, array $config): void
 {
-    if (!is_dir($dirPath)) {
-        mkdir($dirPath);
+    $outputPath = $config['outputPath'];
+    $imagesDirPath = $config['imagesDirPath'];
+    $images = $document->find('img');
+    $fullImagesDirPath = "{$outputPath}/{$imagesDirPath}";
+    if (!is_dir($fullImagesDirPath)) {
+        mkdir($fullImagesDirPath);
     }
-    foreach ($urls as $url) {
-        $imgUrl = $url->getAttribute('src');
-        $imageUrlModifiedName = getNameFromUrl($imgUrl);
-        $client->get($imgUrl, ['sink' => "{$dirPath}/{$imageUrlModifiedName}"]);
+    foreach ($images as $image) {
+        $imgUrl = $image->getAttribute('src');
+        if (str_contains($imgUrl, 'png') || str_contains($imgUrl, 'jpg')) {
+            $imageUrlModifiedName = getNameFromUrl($imgUrl);
+            $client->get($imgUrl, ['sink' => "$fullImagesDirPath/{$imageUrlModifiedName}"]);
+            $image->setAttribute("src", "{$imagesDirPath}/{$imageUrlModifiedName}");
+        }
     }
 }
 
