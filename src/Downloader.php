@@ -32,6 +32,9 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
         processImages($document, $client, ['outputPath' => $outputPath, 'imagesDirPath' => "{$urlModifiedName}_files"]);
     }
     file_put_contents($filePath, $document->html());
+
+    $realFilePath = realpath($filePath);
+    echo "Page was successfully downloaded into {$realFilePath}\n";
 }
 
 /**

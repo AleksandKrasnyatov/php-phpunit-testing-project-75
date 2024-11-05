@@ -1,0 +1,9 @@
+.bi-123::before {
+    content: "\f67f";
+}
+.bi-alarm-fill::before {
+    content: "\f101";
+}
+.bi-alarm::before {
+    content: "\f102";
+}

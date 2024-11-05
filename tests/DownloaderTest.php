@@ -2,6 +2,7 @@
 
 namespace tests;
 
+use DiDom\Exceptions\InvalidSelectorException;
 use GuzzleHttp\Exception\GuzzleException;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
@@ -26,7 +27,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException
+     * @throws GuzzleException|InvalidSelectorException
      */
     public function testCreateFileRecursive(): void
     {
@@ -40,7 +41,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException
+     * @throws GuzzleException|InvalidSelectorException
      */
     public function testFileContent(): void
     {
@@ -60,7 +61,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException
+     * @throws GuzzleException|InvalidSelectorException
      */
     public function testImagesLogic(): void
     {
@@ -68,6 +69,19 @@ class DownloaderTest extends TestCase
         $directoryPath = vfsStream::url('exampleDir');
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
         $newFilePath = "{$directoryPath}/foo-com_files/foo-com-assets-mrstar.png";
+        $this->assertFileEquals($expectedFilePath, $newFilePath);
+    }
+
+    /**
+     * @throws GuzzleException|InvalidSelectorException
+     */
+    public function testLocalResourcesLogic(): void
+    {
+        $expectedCssPath = __DIR__ . "/fixtures/test.css";
+        $expectedJsPath = __DIR__ . "/fixtures/test.js";
+        $directoryPath = vfsStream::url('exampleDir');
+        downloadPage('https://foo.com', $directoryPath, FakeClient::class);
+        $newCssPath = "{$directoryPath}/foo-com_files/foo-com-assets-mrstar.png";
         $this->assertFileEquals($expectedFilePath, $newFilePath);
     }
 }
