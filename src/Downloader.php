@@ -71,10 +71,11 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
             $elementUrl = $element->getAttribute($attribute);
             if (str_contains($elementUrl, $host)) {
                 $elementUrlModifiedName = getNameFromUrl($elementUrl);
-                $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
                 $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
-                if ($elementUrl == $url) {
+                if (trim($elementUrl, '/') == $url) {
                     $elementPath .= ".html";
+                } else {
+                    $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
                 }
                 $element->setAttribute($attribute, $elementPath);
             }
