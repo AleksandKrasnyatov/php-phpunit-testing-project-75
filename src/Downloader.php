@@ -23,14 +23,18 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
     if (!is_dir($outputPath)) {
         mkdir($outputPath, recursive: true);
     }
+    $host = parse_url($url)['host'] ?? '';
     $urlModifiedName = getNameFromUrl($url);
     $filePath = "{$outputPath}/{$urlModifiedName}.html";
     touch($filePath);
 
     $document = new Document($html);
-    if ($document->has('img')) {
-        processImages($document, $client, ['outputPath' => $outputPath, 'imagesDirPath' => "{$urlModifiedName}_files"]);
-    }
+    processFiles($document, $client, [
+        'outputPath' => $outputPath,
+        'filesPath' => "{$urlModifiedName}_files",
+        'url' => $url,
+        'host' => $host,
+    ]);
     file_put_contents($filePath, $document->html());
 
     $realFilePath = realpath($filePath);
@@ -40,26 +44,40 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
 /**
  * @param Document $document
  * @param FakeClient|Client $client
- * @param string $imagesDirPath
+ * @param array $config
  * @return void
  * @throws GuzzleException
  * @throws InvalidSelectorException
  */
-function processImages(Document $document, FakeClient|Client $client, array $config): void
+function processFiles(Document $document, FakeClient|Client $client, array $config): void
 {
+    $tagAttributeMapping = [
+        'img' => 'src',
+        'link' => 'href',
+        'script' => 'src',
+    ];
+
     $outputPath = $config['outputPath'];
-    $imagesDirPath = $config['imagesDirPath'];
-    $images = $document->find('img');
-    $fullImagesDirPath = "{$outputPath}/{$imagesDirPath}";
+    $filesPath = $config['filesPath'];
+    $host = $config['host'];
+    $url = $config['url'];
+    $fullImagesDirPath = "{$outputPath}/{$filesPath}";
     if (!is_dir($fullImagesDirPath)) {
         mkdir($fullImagesDirPath);
     }
-    foreach ($images as $image) {
-        $imgUrl = $image->getAttribute('src');
-        if (str_contains($imgUrl, 'png') || str_contains($imgUrl, 'jpg')) {
-            $imageUrlModifiedName = getNameFromUrl($imgUrl);
-            $client->get($imgUrl, ['sink' => "$fullImagesDirPath/{$imageUrlModifiedName}"]);
-            $image->setAttribute("src", "{$imagesDirPath}/{$imageUrlModifiedName}");
+
+    foreach ($tagAttributeMapping as $tag => $attribute) {
+        foreach ($document->find($tag) as $element) {
+            $elementUrl = $element->getAttribute($attribute);
+            if (str_contains($elementUrl, $host)) {
+                $elementUrlModifiedName = getNameFromUrl($elementUrl);
+                $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
+                $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
+                if ($elementUrl == $url) {
+                    $elementPath .= ".html";
+                }
+                $element->setAttribute($attribute, $elementPath);
+            }
         }
     }
 }

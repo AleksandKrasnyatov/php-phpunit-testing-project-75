@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <title>Курсы по программированию Хекслет</title>
     <link rel="stylesheet" media="all" href="https://cdn2.hexlet.io/assets/menu.css">
-    <link rel="stylesheet" media="all" href="ru-hexlet-io-courses_files/ru-hexlet-io-assets-application.css">
-    <link href="ru-hexlet-io-courses_files/ru-hexlet-io-courses.html" rel="canonical">
+    <link rel="stylesheet" media="all" href="foo-com_files/foo-com-assets-application.css">
+    <link href="foo-com_files/foo-com.html" rel="canonical">
 </head>
 <body class="min-vh-100 d-flex flex-column">
     <header class="flex-shrink-0">
@@ -19,6 +19,6 @@
       <a href="/professions/php">PHP-программист</a>
     </h3>
     <script src="https://js.stripe.com/v3/"></script>
-    <script src="ru-hexlet-io-courses_files/ru-hexlet-io-packs-js-runtime.js"></script>
+    <script src="foo-com_files/foo-com-packs-js-runtime.js"></script>
 </body>
 </html>

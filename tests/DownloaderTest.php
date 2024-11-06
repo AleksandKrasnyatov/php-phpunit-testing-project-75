@@ -81,7 +81,9 @@ class DownloaderTest extends TestCase
         $expectedJsPath = __DIR__ . "/fixtures/test.js";
         $directoryPath = vfsStream::url('exampleDir');
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
-        $newCssPath = "{$directoryPath}/foo-com_files/foo-com-assets-mrstar.png";
-        $this->assertFileEquals($expectedFilePath, $newFilePath);
+        $newCssPath = "{$directoryPath}/foo-com_files/foo-com-assets-application.css";
+        $newJsPath = "{$directoryPath}/foo-com_files/foo-com-packs-js-runtime.js";
+        $this->assertFileEquals($expectedCssPath, $newCssPath);
+        $this->assertFileEquals($expectedJsPath, $newJsPath);
     }
 }
