@@ -6,6 +6,9 @@ use DiDom\Document;
 use DiDom\Exceptions\InvalidSelectorException;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use Monolog\Level;
+use Monolog\Logger;
+use Monolog\Handler\StreamHandler;
 use tests\FakeClient;
 
 /**
@@ -18,24 +21,31 @@ use tests\FakeClient;
  */
 function downloadPage(string $url, $outputPath, string $clientClass): void
 {
+    $log = new Logger("downloading - {$url}");
+
     $client = new $clientClass();
     $html = $client->get($url)->getBody()->getContents();
     if (!is_dir($outputPath)) {
         mkdir($outputPath, recursive: true);
     }
+    $log->pushHandler(new StreamHandler(realpath($outputPath) . '/log.log', Level::Warning));
+
     $host = parse_url($url)['host'] ?? '';
     $urlModifiedName = getNameFromUrl($url);
     $filePath = "{$outputPath}/{$urlModifiedName}.html";
     touch($filePath);
-
-    $document = new Document($html);
-    processFiles($document, $client, [
-        'outputPath' => $outputPath,
-        'filesPath' => "{$urlModifiedName}_files",
-        'url' => $url,
-        'host' => $host,
-    ]);
-    file_put_contents($filePath, $document->html());
+    try {
+        $document = new Document($html);
+        processFiles($document, $client, [
+            'outputPath' => $outputPath,
+            'filesPath' => "{$urlModifiedName}_files",
+            'url' => $url,
+            'host' => $host,
+        ]);
+        file_put_contents($filePath, $document->html());
+    } catch (\Exception $exception) {
+        $log->error($exception->getMessage());
+    }
 
     $realFilePath = realpath($filePath);
     echo "Page was successfully downloaded into {$realFilePath}\n";
@@ -69,6 +79,9 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
     foreach ($tagAttributeMapping as $tag => $attribute) {
         foreach ($document->find($tag) as $element) {
             $elementUrl = $element->getAttribute($attribute);
+            if ($elementUrl && $elementUrl[0] === '/' && $elementUrl[1] !== '/') {
+                $elementUrl = "https://{$host}{$elementUrl}";
+            }
             if (str_contains($elementUrl, $host)) {
                 $elementUrlModifiedName = getNameFromUrl($elementUrl);
                 $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
@@ -89,7 +102,7 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
  */
 function getNameFromUrl(string $url): string
 {
-    $urlParts = parse_url($url);
+    $urlParts = parse_url(trim($url, '/'));
     $modifiedHost = str_replace('.', '-', $urlParts['host'] ?? '');
     $modifiedPath = str_replace(['/', '_'], '-', $urlParts['path'] ?? '');
     return "{$modifiedHost}{$modifiedPath}";

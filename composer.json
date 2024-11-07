@@ -12,7 +12,8 @@
         "docopt/docopt": "^1.0",
         "guzzlehttp/guzzle": "^7.9",
         "mikey179/vfsstream": "^1.6",
-        "imangazaliev/didom": "^2.0"
+        "imangazaliev/didom": "^2.0",
+        "monolog/monolog": "^3.7"
     },
     "require-dev": {
         "squizlabs/php_codesniffer": "*",
