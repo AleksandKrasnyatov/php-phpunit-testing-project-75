@@ -1,3 +1,4 @@
-function aa() {
+function aa()
+{
     console.log('test')
 }

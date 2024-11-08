@@ -22,33 +22,35 @@ use tests\FakeClient;
 function downloadPage(string $url, $outputPath, string $clientClass): void
 {
     $log = new Logger("downloading - {$url}");
-
-    $client = new $clientClass();
-    $html = $client->get($url)->getBody()->getContents();
-    if (!is_dir($outputPath)) {
-        mkdir($outputPath, recursive: true);
-    }
-    $log->pushHandler(new StreamHandler(realpath($outputPath) . '/log.log', Level::Warning));
-
-    $host = parse_url($url)['host'] ?? '';
     $urlModifiedName = getNameFromUrl($url);
-    $filePath = "{$outputPath}/{$urlModifiedName}.html";
-    touch($filePath);
+    $log->pushHandler(new StreamHandler(realpath($outputPath) . "/$urlModifiedName.log"));
+
     try {
+        $client = new $clientClass();
+        $html = $client->get($url)->getBody()->getContents();
+        if (!is_dir($outputPath)) {
+            mkdir($outputPath, recursive: true);
+        }
+
+        $host = parse_url($url)['host'] ?? '';
+        $filePath = "{$outputPath}/{$urlModifiedName}.html";
+        touch($filePath);
+
         $document = new Document($html);
         processFiles($document, $client, [
             'outputPath' => $outputPath,
             'filesPath' => "{$urlModifiedName}_files",
             'url' => $url,
             'host' => $host,
+            'log' => $log,
         ]);
         file_put_contents($filePath, $document->html());
+        $realFilePath = realpath($filePath);
+        echo "Page was successfully downloaded into {$realFilePath}\n";
     } catch (\Exception $exception) {
         $log->error($exception->getMessage());
+        echo "Something goes wrong\n";
     }
-
-    $realFilePath = realpath($filePath);
-    echo "Page was successfully downloaded into {$realFilePath}\n";
 }
 
 /**
@@ -67,6 +69,7 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
         'script' => 'src',
     ];
 
+    $log = $config['log'];
     $outputPath = $config['outputPath'];
     $filesPath = $config['filesPath'];
     $host = $config['host'];
@@ -75,22 +78,25 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
     if (!is_dir($fullImagesDirPath)) {
         mkdir($fullImagesDirPath);
     }
-
     foreach ($tagAttributeMapping as $tag => $attribute) {
         foreach ($document->find($tag) as $element) {
-            $elementUrl = $element->getAttribute($attribute);
-            if ($elementUrl && $elementUrl[0] === '/' && $elementUrl[1] !== '/') {
-                $elementUrl = "https://{$host}{$elementUrl}";
-            }
-            if (str_contains($elementUrl, $host)) {
-                $elementUrlModifiedName = getNameFromUrl($elementUrl);
-                $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
-                if (trim($elementUrl, '/') == $url) {
-                    $elementPath .= ".html";
-                } else {
-                    $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
+            try {
+                $elementUrl = $element->getAttribute($attribute);
+                if ($elementUrl && $elementUrl[0] === '/' && $elementUrl[1] !== '/') {
+                    $elementUrl = "https://{$host}{$elementUrl}";
                 }
-                $element->setAttribute($attribute, $elementPath);
+                if (str_contains($elementUrl, $host)) {
+                    $elementUrlModifiedName = getNameFromUrl($elementUrl);
+                    $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
+                    if (trim($elementUrl, '/') == $url) {
+                        $elementPath .= ".html";
+                    } else {
+                        $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
+                    }
+                    $element->setAttribute($attribute, $elementPath);
+                }
+            } catch (\Exception $exception) {
+                $log->error($exception->getMessage());
             }
         }
     }
