@@ -46,10 +46,10 @@ function downloadPage(string $url, $outputPath, string $clientClass): void
         ]);
         file_put_contents($filePath, $document->html());
         $realFilePath = realpath($filePath);
-        echo "Page was successfully downloaded into {$realFilePath}\n";
+        exit("Page was successfully downloaded into {$realFilePath}\n");
     } catch (\Exception $exception) {
         $log->error($exception->getMessage());
-        echo "Something goes wrong\n";
+        exit("Something goes wrong\n");
     }
 }
 
