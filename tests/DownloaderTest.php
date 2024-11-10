@@ -10,6 +10,8 @@ use PHPUnit\Framework\TestCase;
 
 use function Downloader\Downloader\downloadPage;
 use function Downloader\Downloader\getNameFromUrl;
+use function Downloader\Downloader\isAbsoluteUrl;
+use function Downloader\Downloader\makeAbsoluteUrl;
 
 class DownloaderTest extends TestCase
 {
@@ -49,6 +51,26 @@ class DownloaderTest extends TestCase
         $directoryPath = vfsStream::url('exampleDir');
         downloadPage('https://foo.com', $directoryPath, FakeClient::class);
         $this->assertFileEquals($expectedFilePath, $directoryPath . "/foo-com.html");
+    }
+
+    public function testMakeAbsoluteUrlFunction(): void
+    {
+        $this->assertEquals('http://foo.com', makeAbsoluteUrl('//foo.com', ''));
+        $this->assertEquals('http://foo.com/hello', makeAbsoluteUrl('/hello', 'foo.com'));
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('hello is not a relative path, but needed to be');
+        makeAbsoluteUrl('hello', 'foo.com');
+    }
+
+    /**
+     * @return void
+     */
+    public function testIsAbsoluteUrlFunction(): void
+    {
+        $this->assertTrue(isAbsoluteUrl('https://foo.com'));
+        $this->assertTrue(isAbsoluteUrl('http://foo.com'));
+        $this->assertFalse(isAbsoluteUrl('//foo.com'));
+        $this->assertFalse(isAbsoluteUrl('/foo.com'));
     }
 
     /**
