@@ -2,12 +2,11 @@
 
 namespace tests;
 
-use DiDom\Exceptions\InvalidSelectorException;
-use GuzzleHttp\Exception\GuzzleException;
+use Exception;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\TestCase;
-
+use Throwable;
 use function Downloader\Downloader\downloadPage;
 use function Downloader\Downloader\getNameFromUrl;
 use function Downloader\Downloader\isAbsoluteUrl;
@@ -29,7 +28,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException|InvalidSelectorException
+     * @throws Throwable
      */
     public function testCreateFileRecursive(): void
     {
@@ -43,7 +42,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException|InvalidSelectorException
+     * @throws Throwable
      */
     public function testFileContent(): void
     {
@@ -53,11 +52,15 @@ class DownloaderTest extends TestCase
         $this->assertFileEquals($expectedFilePath, $directoryPath . "/foo-com.html");
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     public function testMakeAbsoluteUrlFunction(): void
     {
         $this->assertEquals('http://foo.com', makeAbsoluteUrl('//foo.com', ''));
         $this->assertEquals('http://foo.com/hello', makeAbsoluteUrl('/hello', 'foo.com'));
-        $this->expectException(\Exception::class);
+        $this->expectException(Exception::class);
         $this->expectExceptionMessage('hello is not a relative path, but needed to be');
         makeAbsoluteUrl('hello', 'foo.com');
     }
@@ -83,7 +86,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException|InvalidSelectorException
+     * @throws Throwable
      */
     public function testImagesLogic(): void
     {
@@ -95,7 +98,7 @@ class DownloaderTest extends TestCase
     }
 
     /**
-     * @throws GuzzleException|InvalidSelectorException
+     * @throws Throwable
      */
     public function testLocalResourcesLogic(): void
     {
@@ -107,5 +110,17 @@ class DownloaderTest extends TestCase
         $newJsPath = "{$directoryPath}/foo-com_files/foo-com-packs-js-runtime.js";
         $this->assertFileEquals($expectedCssPath, $newCssPath);
         $this->assertFileEquals($expectedJsPath, $newJsPath);
+    }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testFileSystemExceptions(): void
+    {
+        $outputPath = vfsStream::newDirectory('blocked', 0000)->url();
+        $this->expectException(Exception::class);
+        $this->expectExceptionMessage("Something wrong when created directory '$outputPath'");
+        downloadPage('https://foo.com', $outputPath, FakeClient::class);
     }
 }

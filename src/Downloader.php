@@ -10,26 +10,29 @@ use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use tests\FakeClient;
+use Throwable;
 
 /**
  * @param string $url
- * @param $outputPath
+ * @param string $outputPath
  * @param string $clientClass tests\FakeClient| GuzzleHttp\Client
  * @return string
- * @throws GuzzleException
+ * @throws Throwable
  */
-function downloadPage(string $url, $outputPath, string $clientClass): string
+function downloadPage(string $url, string $outputPath, string $clientClass): string
 {
-    $log = new Logger("downloading - {$url}");
-    $urlModifiedName = getNameFromUrl($url);
-    $log->pushHandler(new StreamHandler(realpath($outputPath) . "/$urlModifiedName.log"));
+        if (!is_dir($outputPath)) {
+            if (!mkdir($outputPath, recursive: true)) {
+                throw new Exception("Something wrong when created directory '$outputPath'");
+            }
+        }
 
-    try {
+        $log = new Logger("downloading - {$url}");
+        $urlModifiedName = getNameFromUrl($url);
+        $log->pushHandler(new StreamHandler(realpath($outputPath) . "/$urlModifiedName.log"));
+
         $client = new $clientClass();
         $html = $client->get($url)->getBody()->getContents();
-        if (!is_dir($outputPath)) {
-            mkdir($outputPath, recursive: true);
-        }
 
         $host = parse_url($url)['host'] ?? '';
         $filePath = "{$outputPath}/{$urlModifiedName}.html";
@@ -45,11 +48,8 @@ function downloadPage(string $url, $outputPath, string $clientClass): string
         ]);
         file_put_contents($filePath, $document->html());
         $realFilePath = realpath($filePath);
+        $log->info("Page was successfully downloaded into {$realFilePath}");
         return "Page was successfully downloaded into {$realFilePath}\n";
-    } catch (Exception $exception) {
-        $log->error($exception->getMessage());
-        return "Something goes wrong\n";
-    }
 }
 
 /**
