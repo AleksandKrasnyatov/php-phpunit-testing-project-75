@@ -3,10 +3,8 @@
 namespace Downloader\Downloader;
 
 use DiDom\Document;
-use DiDom\Exceptions\InvalidSelectorException;
 use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 use tests\FakeClient;
@@ -21,35 +19,38 @@ use Throwable;
  */
 function downloadPage(string $url, string $outputPath, string $clientClass): string
 {
-        if (!is_dir($outputPath)) {
-            if (!mkdir($outputPath, recursive: true)) {
-                throw new Exception("Something wrong when created directory '$outputPath'");
-            }
+    if (!is_dir($outputPath)) {
+        if (!mkdir($outputPath, recursive: true)) {
+            throw new Exception("Something wrong when created directory '$outputPath'");
         }
+    }
 
-        $log = new Logger("downloading - {$url}");
-        $urlModifiedName = getNameFromUrl($url);
-        $log->pushHandler(new StreamHandler(realpath($outputPath) . "/$urlModifiedName.log"));
+    $log = new Logger("downloading - {$url}");
+    $urlModifiedName = getNameFromUrl($url);
+    $log->pushHandler(new StreamHandler($outputPath . "/$urlModifiedName.log"));
 
-        $client = new $clientClass();
-        $html = $client->get($url)->getBody()->getContents();
+    $client = new $clientClass();
+    $html = $client->get($url)->getBody()->getContents();
 
-        $host = parse_url($url)['host'] ?? '';
-        $filePath = "{$outputPath}/{$urlModifiedName}.html";
-        touch($filePath);
+    $host = parse_url($url)['host'] ?? '';
+    $filePath = "{$outputPath}/{$urlModifiedName}.html";
+    if (!touch($filePath)) {
+        $log->error("Something wrong when created html file '{$filePath}'");
+        throw new Exception("Something wrong when created html file '{$filePath}'");
+    }
 
-        $document = new Document($html);
-        processFiles($document, $client, [
-            'outputPath' => $outputPath,
-            'filesPath' => "{$urlModifiedName}_files",
-            'url' => $url,
-            'host' => $host,
-            'log' => $log,
-        ]);
-        file_put_contents($filePath, $document->html());
-        $realFilePath = realpath($filePath);
-        $log->info("Page was successfully downloaded into {$realFilePath}");
-        return "Page was successfully downloaded into {$realFilePath}\n";
+    $document = new Document($html);
+    processFiles($document, $client, [
+        'outputPath' => $outputPath,
+        'filesPath' => "{$urlModifiedName}_files",
+        'url' => $url,
+        'host' => $host,
+        'log' => $log,
+    ]);
+    file_put_contents($filePath, $document->html());
+    $realFilePath = realpath($filePath) ? realpath($filePath) : $filePath;
+    $log->info("Page was successfully downloaded into {$realFilePath}");
+    return "Page was successfully downloaded into {$realFilePath}\n";
 }
 
 /**
@@ -57,8 +58,7 @@ function downloadPage(string $url, string $outputPath, string $clientClass): str
  * @param FakeClient|Client $client
  * @param array $config
  * @return void
- * @throws GuzzleException
- * @throws InvalidSelectorException
+ * @throws Throwable
  */
 function processFiles(Document $document, FakeClient|Client $client, array $config): void
 {
@@ -79,26 +79,23 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
     }
     foreach ($tagAttributeMapping as $tag => $attribute) {
         foreach ($document->find($tag) as $element) {
-            try {
-                $elementUrl = $element->getAttribute($attribute);
-                if (is_null($elementUrl)) {
-                    continue;
+            $elementUrl = $element->getAttribute($attribute);
+            if (is_null($elementUrl)) {
+                continue;
+            }
+            if (!isAbsoluteUrl($elementUrl)) {
+                $elementUrl = makeAbsoluteUrl($elementUrl, $host);
+            }
+            if (str_contains($elementUrl, $host)) {
+                $elementUrlModifiedName = getNameFromUrl($elementUrl);
+                $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
+                if (trim($elementUrl, '/') == $url) {
+                    $elementPath .= ".html";
+                } else {
+                    $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
                 }
-                if (!isAbsoluteUrl($elementUrl)) {
-                    $elementUrl = makeAbsoluteUrl($elementUrl, $host);
-                }
-                if (str_contains($elementUrl, $host)) {
-                    $elementUrlModifiedName = getNameFromUrl($elementUrl);
-                    $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
-                    if (trim($elementUrl, '/') == $url) {
-                        $elementPath .= ".html";
-                    } else {
-                        $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
-                    }
-                    $element->setAttribute($attribute, $elementPath);
-                }
-            } catch (Exception $exception) {
-                $log->error($exception->getMessage());
+                $element->setAttribute($attribute, $elementPath);
+                $log->info("Element {$elementUrl} was successfully handled, current path {$elementPath}");
             }
         }
     }

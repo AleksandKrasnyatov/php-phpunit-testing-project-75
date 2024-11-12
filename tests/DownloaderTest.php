@@ -116,11 +116,25 @@ class DownloaderTest extends TestCase
      * @return void
      * @throws Throwable
      */
-    public function testFileSystemExceptions(): void
+    public function testMkDirExceptions(): void
     {
-        $outputPath = vfsStream::newDirectory('blocked', 0000)->url();
-        $this->expectException(Exception::class);
+        $directoryPath = $this->root->url() . "/for_block_test";
+        mkdir($directoryPath, 0000);
+        $outputPath = $directoryPath . "/blocked";
         $this->expectExceptionMessage("Something wrong when created directory '$outputPath'");
         downloadPage('https://foo.com', $outputPath, FakeClient::class);
     }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testCreateFileExceptions(): void
+    {
+        $outputPath = $this->root->url() . '/blocked';
+        mkdir($outputPath, 0000);
+        $this->expectExceptionMessage("Something wrong when created html file '{$outputPath}/foo-com.html'");
+        downloadPage('https://foo.com', $outputPath, FakeClient::class);
+    }
+
 }
