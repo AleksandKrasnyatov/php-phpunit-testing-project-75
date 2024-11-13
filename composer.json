@@ -6,7 +6,9 @@
     "autoload": {
         "files": [
             "src/Downloader.php",
-            "tests/FakeClient.php"
+            "tests/FakeClient.php",
+            "tests/FakeClientWithException.php",
+            "tests/FakeClientIncorrectUrl.php"
         ]
     },"require": {
         "docopt/docopt": "^1.0",

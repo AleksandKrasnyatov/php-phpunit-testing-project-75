@@ -121,10 +121,10 @@ function getNameFromUrl(string $url): string
  */
 function makeAbsoluteUrl(string $url, string $host): string
 {
-    if (str_contains($url, '//')) {
+    if (str_starts_with($url, '//')) {
         return "http:{$url}";
     }
-    if (str_contains($url, '/')) {
+    if (str_starts_with($url, '/')) {
         return "http://{$host}{$url}";
     }
     throw new Exception("$url is not a relative path, but needed to be");

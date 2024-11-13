@@ -7,6 +7,7 @@ use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use PHPUnit\Framework\TestCase;
 use Throwable;
+
 use function Downloader\Downloader\downloadPage;
 use function Downloader\Downloader\getNameFromUrl;
 use function Downloader\Downloader\isAbsoluteUrl;
@@ -137,4 +138,23 @@ class DownloaderTest extends TestCase
         downloadPage('https://foo.com', $outputPath, FakeClient::class);
     }
 
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testIncorrectSrcUrlException(): void
+    {
+        $this->expectExceptionMessage("foo.com/wrong/url.css is not a relative path, but needed to be");
+        downloadPage('https://foo.com', vfsStream::url('exampleDir'), FakeClientIncorrectUrl::class);
+    }
+
+    /**
+     * @return void
+     * @throws Throwable
+     */
+    public function testClientGetException(): void
+    {
+        $this->expectException(Exception::class);
+        downloadPage('https://foo.com', vfsStream::url('exampleDir'), FakeClientWithException::class);
+    }
 }

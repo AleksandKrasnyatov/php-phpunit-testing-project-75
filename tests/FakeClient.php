@@ -10,14 +10,14 @@ use Exception;
 class FakeClient
 {
     public string|false $response;
+    public string $fixtureFilePath = __DIR__ . "/fixtures/parsedBody.txt";
 
-    public function __construct()
+    public function __construct(array $config = [])
     {
-        $fixtureFilePath = __DIR__ . "/fixtures/parsedBody.txt";
-        if (file_exists($fixtureFilePath)) {
-            $this->response = file_get_contents($fixtureFilePath);
+        if (file_exists($this->fixtureFilePath)) {
+            $this->response = file_get_contents($this->fixtureFilePath);
         } else {
-            throw new Exception("Fixture file not found: " . $fixtureFilePath);
+            throw new Exception("Fixture file not found: " . $this->fixtureFilePath);
         }
     }
 
