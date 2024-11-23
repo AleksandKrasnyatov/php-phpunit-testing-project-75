@@ -31,6 +31,9 @@ $doc = <<<DOC
     DOC;
 
 
-$result = Docopt::handle($doc, array('version'=>'Generate diff 1.0'));
-
-exit(downloadPage( $result['<url>'], $result['--output'], Client::class));
+$result = Docopt::handle($doc, array('version' => 'Generate diff 1.0'));
+try {
+    exit(downloadPage($result['<url>'], $result['--output'], Client::class));
+} catch (\Throwable $exception) {
+    fwrite(STDERR, $exception->getMessage() . "\n");
+}
