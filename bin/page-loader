@@ -17,7 +17,7 @@ $currentDir = getcwd();
 
 $doc = <<<DOC
 
-    Generate diff
+    Downloads page from URL and save it locally
     
     Usage:
         page-loader (-h|--help)
