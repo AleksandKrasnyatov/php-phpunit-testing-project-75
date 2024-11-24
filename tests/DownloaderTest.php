@@ -12,6 +12,7 @@ use function Downloader\Downloader\downloadPage;
 use function Downloader\Downloader\getNameFromUrl;
 use function Downloader\Downloader\isAbsoluteUrl;
 use function Downloader\Downloader\makeAbsoluteUrl;
+use function Downloader\Downloader\getUrlWithoutScheme;
 
 class DownloaderTest extends TestCase
 {
@@ -58,6 +59,16 @@ class DownloaderTest extends TestCase
      * @throws Exception
      */
     public function testMakeAbsoluteUrlFunction(): void
+    {
+        $this->assertEquals('foo.com', getUrlWithoutScheme('http://foo.com'));
+        $this->assertEquals('foo.com/hello', getUrlWithoutScheme('https://foo.com/hello'));
+    }
+
+    /**
+     * @return void
+     * @throws Exception
+     */
+    public function testGetUrlWithoutSchemeFunction(): void
     {
         $this->assertEquals('http://foo.com', makeAbsoluteUrl('//foo.com', ''));
         $this->assertEquals('http://foo.com/hello', makeAbsoluteUrl('/hello', 'foo.com'));

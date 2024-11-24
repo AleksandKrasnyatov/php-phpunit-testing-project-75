@@ -88,12 +88,11 @@ function processFiles(Document $document, FakeClient|Client $client, array $conf
             }
             if (str_contains($elementUrl, $host)) {
                 $elementUrlModifiedName = getNameFromUrl($elementUrl);
-                $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
-                if (trim($elementUrl, '/') == $url) {
-                    $elementPath .= ".html";
-                } else {
-                    $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
+                if (getUrlWithoutScheme($elementUrl) == getUrlWithoutScheme($url)) {
+                    $elementUrlModifiedName .= ".html";
                 }
+                $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
+                $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
                 $element->setAttribute($attribute, $elementPath);
                 $log->info("Element {$elementUrl} was successfully handled, current path {$elementPath}");
             }
@@ -115,6 +114,19 @@ function getNameFromUrl(string $url): string
 
 /**
  * @param string $url
+ * @return string
+ */
+function getUrlWithoutScheme(string $url): string
+{
+    $urlParts = parse_url(trim($url, '/'));
+    $host = $urlParts['host'] ?? '';
+    $path = $urlParts['path'] ?? '';
+    return "{$host}{$path}";
+}
+
+
+/**
+ * @param string $url
  * @param string $host
  * @return string
  * @throws Exception
@@ -125,6 +137,10 @@ function makeAbsoluteUrl(string $url, string $host): string
         return "http:{$url}";
     }
     if (str_starts_with($url, '/')) {
+        return "http://{$host}{$url}";
+    }
+    if (str_starts_with($url, '.')) {
+        $url = trim($url, '.');
         return "http://{$host}{$url}";
     }
     throw new Exception("$url is not a relative path, but needed to be");
