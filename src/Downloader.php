@@ -50,7 +50,7 @@ function downloadPage(string $url, string $outputPath, string $clientClass): str
     file_put_contents($filePath, $document->html());
     $realFilePath = realpath($filePath) ? realpath($filePath) : $filePath;
     $log->info("Page was successfully downloaded into {$realFilePath}");
-    return "Page was successfully downloaded into {$realFilePath}\n";
+    return $realFilePath;
 }
 
 /**
