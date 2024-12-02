@@ -55,12 +55,12 @@ function downloadPage(string $url, string $outputPath, string $clientClass): str
 
 /**
  * @param Document $document
- * @param FakeClient|Client $client
+ * @param $client //tests\FakeClient| GuzzleHttp\Client
  * @param array $config
  * @return void
  * @throws Throwable
  */
-function processFiles(Document $document, FakeClient|Client $client, array $config): void
+function processFiles(Document $document, $client, array $config): void
 {
     $tagAttributeMapping = [
         'img' => 'src',
