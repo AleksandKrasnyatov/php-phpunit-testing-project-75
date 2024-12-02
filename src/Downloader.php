@@ -71,9 +71,9 @@ function processFiles(Document $document, $client, array $config): void
     $filesPath = $config['filesPath'];
     $host = $config['host'];
     $url = $config['url'];
-    $fullImagesDirPath = "{$outputPath}/{$filesPath}";
-    if (!is_dir($fullImagesDirPath)) {
-        mkdir($fullImagesDirPath);
+    $fullFilesDirPath = "{$outputPath}/{$filesPath}";
+    if (!is_dir($fullFilesDirPath)) {
+        mkdir($fullFilesDirPath, recursive: true);
     }
     foreach ($tagAttributeMapping as $tag => $attribute) {
         foreach ($document->find($tag) as $element) {
@@ -91,7 +91,7 @@ function processFiles(Document $document, $client, array $config): void
                     $elementUrlModifiedName .= ".html";
                 }
                 $elementPath = "{$filesPath}/{$elementUrlModifiedName}";
-                $client->get($elementUrl, ['sink' => "$fullImagesDirPath/{$elementUrlModifiedName}"]);
+                $client->get($elementUrl, ['sink' => "$fullFilesDirPath/{$elementUrlModifiedName}"]);
                 $element->setAttribute($attribute, $elementPath);
                 $log->info("Element {$elementUrl} was successfully handled, current path {$elementPath}");
             }
