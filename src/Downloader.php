@@ -4,10 +4,8 @@ namespace Downloader\Downloader;
 
 use DiDom\Document;
 use Exception;
-use GuzzleHttp\Client;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
-use tests\FakeClient;
 use Throwable;
 
 /**
@@ -86,7 +84,8 @@ function processFiles(Document $document, $client, array $config): void
             if (!isAbsoluteUrl($elementUrl)) {
                 $elementUrl = makeAbsoluteUrl($elementUrl, $host);
             }
-            if (str_contains($elementUrl, $host)) {
+            $elementUrlHost = parse_url($elementUrl)['host'] ?? '';
+            if ($elementUrlHost == $host) {
                 $elementUrlModifiedName = getNameFromUrl($elementUrl);
                 if (getUrlWithoutScheme($elementUrl) == getUrlWithoutScheme($url)) {
                     $elementUrlModifiedName .= ".html";
